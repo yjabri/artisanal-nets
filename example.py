@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import fetch_mldata
 from sklearn.model_selection import train_test_split
@@ -30,36 +29,33 @@ test_X = test_X / 255
 
 # Preprocess Data - Apply 1 hot encoding to Y
 # We also take the transpose so that each column corresponds to an entry
-train_Y = one_hot_encoding(train_Y_preprocessed).T
-test_Y = one_hot_encoding(test_Y_preprocessed).T
+train_Y = one_hot_encoding(train_Y_preprocessed.reshape(1, -1), 10)
+test_Y = one_hot_encoding(test_Y_preprocessed.reshape(1, -1), 10)
 
 errors = []
 
-units = [784, 800, 400, 200, 100, 10]
-activations = [nn.relu, nn.relu, nn.relu, nn.relu, nn.softmax]
-dactivations =  [nn.drelu, nn.drelu, nn.drelu, nn.drelu]
+units = [784, 200, 200, 200, 10]
+activations = [nn.relu, nn.relu, nn.relu, nn.softmax]
+dactivations =  [nn.drelu, nn.drelu, nn.drelu]
 
-batch_size = 512
-beta_1 = 0.9
-beta_2 = 0.99
-epsilon = 10**-8
+batch_size = 128
 
 np.random.seed(217)
 params = nn.initialize_weights(units)
 total_time = 0
 
 t = 1
-epochs = 100
-every = 10
+epochs = 20
+every = 1
 
 print('          epoch|          train|           test|   average time|')
 for epoch in range(epochs):
     start = time()
-
+    
     error = 0
-    m = train_X.shape[0]
+    m = train_X.shape[1]
     random_index = np.random.permutation(m)
-
+    
     # Want to do a full pass of the data.
     for i in range(m // batch_size + 1):
         
@@ -82,9 +78,11 @@ for epoch in range(epochs):
     if epoch % every == 0 and epoch > 0:
         
         train_predictions, _ = nn.forward_pass(train_X, params, activations)
-        train_accuracy = accuracy_score(np.argmax(train_Y, axis=0), np.argmax(train_predictions, axis=0))
+        train_accuracy = accuracy_score(np.argmax(train_Y, axis=0), 
+                                        np.argmax(train_predictions, axis=0))
         test_predictions, _, = nn.forward_pass(test_X, params, activations)
-        test_accuracy = accuracy_score(np.argmax(test_Y, axis=0), np.argmax(test_predictions, axis=0)) 
+        test_accuracy = accuracy_score(np.argmax(test_Y, axis=0), 
+                                       np.argmax(test_predictions, axis=0)) 
         
         # print('epoch', epoch, end='\n', flush=True)
         print('{:15d}|{:15f}|{:15f}|{:15f}|'.format(

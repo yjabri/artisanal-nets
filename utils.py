@@ -4,9 +4,21 @@ from numpy import ndarray
 from typing import List
 
 
-def one_hot_encoding(array):
+#  def one_hot_encoding(array):
     # See https://news.ycombinator.com/item?id=16473482
-    return (array[:, None] == np.unique(array)).view(np.int8)
+    # return (array[:, None] == np.unique(array)).view(np.int8)
+
+
+def one_hot_encoding(X, classes):
+    """
+    This implementation is explicit about the number of classes
+    """    
+    base = np.zeros((classes, X.shape[1]))
+    
+    for i, entry in enumerate(X[0, :]):
+        base[int(entry), i] = 1
+
+    return base
 
 
 def flatten_params(params: OrderedDict) -> ndarray:

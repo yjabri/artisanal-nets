@@ -107,8 +107,8 @@ class Tests(unittest.TestCase):
         m = 10
         X = np.random.randn(4, m)
 
-        Y = np.random.randint(0, 2 + 1, size=m)
-        Y = one_hot_encoding(Y).T
+        Y = np.random.randint(3, size=(1, m))
+        Y = one_hot_encoding(Y, 3)
         
         layers = [4, 3]
         activations = [nn.softmax]
@@ -141,8 +141,8 @@ class Tests(unittest.TestCase):
         m = 10
         X = np.random.randn(4, m)
 
-        Y = np.random.randint(0, 2 + 1, size=m)
-        Y = one_hot_encoding(Y).T
+        Y = np.random.randint(3, size=(1, m))
+        Y = one_hot_encoding(Y, 3)
 
         layers = [4, 6, 3]
         activations = [nn.relu, nn.softmax]
