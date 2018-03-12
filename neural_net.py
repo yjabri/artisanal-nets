@@ -1,5 +1,5 @@
-import numpy as np
 from collections import OrderedDict
+import numpy as np
 
 
 def relu(X):
@@ -43,7 +43,7 @@ def forward_pass(X, params, activations):
         A = activation(Z)
         As.append(A)
         Zs.append(Z)
-        
+
     cache = {'As': As, 'Zs': Zs}
 
     return A, cache
@@ -54,29 +54,55 @@ def backpropagation(X, Y, params, cache, dactivations):
     m = Y.shape[1]
     total_layers = len(As)
 
+    # Pad dactivations to align with As, Zs, Ws
+    dactivations = dactivations + [None]
+
     dWs, dbs = [], []
-    A, W =  As[-1], Ws[-1]
-    previous_A = As[-2] if total_layers > 1 else X
+    dA = 1
 
-    dZ = 1 / m * (A - Y)
-    dW = dZ @ previous_A.T
-    db = np.sum(dZ, axis=1, keepdims=True)
-    dWs.append(dW)
-    dbs.append(db)
-    dA = W.T @ dZ
+    for i in range(total_layers - 1, -1, -1):
+        A, Z, W, dactivation = As[i], Zs[i], Ws[i], dactivations[i]
 
-    for i in range(total_layers - 2, -1, -1):
-        A, Z, W, dactivation =  As[i], Zs[i], Ws[i], dactivations[i]
+        if i == 0:
+            previous_A = X
+        else:
+            previous_A = As[i-1]
 
-        previous_A = As[i-1] if i > 0 else X
-        dZ = dactivation(Z) * dA
-        dW = dZ @ previous_A.T
-        db = np.sum(dZ, axis=1, keepdims=True)
+        if i == total_layers - 1:
+            dZ = (A - Y)
+        else:
+            dZ = dactivation(Z) * dA
+
+        dW = 1 / m * dZ @ previous_A.T
+
+        db = 1 / m * np.sum(dZ, axis=1, keepdims=True)
         dWs.append(dW)
         dbs.append(db)
+
         dA = W.T @ dZ
 
     return OrderedDict(dWs=dWs[::-1], dbs=dbs[::-1])
+
+
+def add_l2_regularization_to_backpropagation(params, grads, lambda_, m):
+
+    updated_dWs = []
+    for dW, W in zip(grads['dWs'], params['Ws']):
+
+        dW = dW
+        dW = dW + 2/m * lambda_ * W
+        updated_dWs.append(dW)
+
+    grads['dWs'] = updated_dWs
+    return grads
+
+
+def add_l2_regularization_to_cross_entropy(cost, params, lambda_, m):
+
+    for W in params['Ws']:
+        cost += lambda_ / m * np.sum(W ** 2)
+
+    return cost
 
 
 def sigmoid_cross_entropy(Y, predictions):
@@ -101,11 +127,11 @@ def update_weights(params, grads, learning_rate):
     """
 
     for (param_k, param_v), grad_v in zip(params.items(), grads.values()):
-        
+
         new_param_v = []
         for param_entry, grad_entry in zip(param_v, grad_v):
             new_param_v.append(param_entry - learning_rate * grad_entry)
-        
+
         params[param_k] = new_param_v
-        
+
     return params
